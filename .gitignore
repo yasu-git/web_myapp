@@ -1,0 +1,17 @@
+# 環境変数ファイル
+.env
+
+# データベース設定ファイル
+config/database.json
+config.js
+
+# ログファイル
+*.log
+
+# 本番用ビルド
+dist/
+
+# OSが生成する不要ファイル
+
+.DS_Store
+Thumbs.db
