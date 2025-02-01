@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
 		//すでに同じemailのユーザーがいるか確認
 		const exitstringUser = await User.findOne({ email });
 		if (exitstringUser) {
-			return res.status(400).json({ success: false, message: 'Email already exists' });
+			return res.status(409).json({ success: false, message: 'Email already exists' });
 		}
 
 		//新しいユーザを作成し、データベースに保存
