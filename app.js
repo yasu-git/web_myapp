@@ -6,8 +6,7 @@ var logger = require('morgan');
 const connectDB = require('./config/database'); // 追加
 const cors = require('cors');
 // ルーティングファイルを読み込む
-var indexRouter = require('./routes/index');
-var userCrudRouter = require('./routes/users_crud');
+var usersRouter = require('./routes/users');
 var app = express();
 
 //database.jsを読み込む
@@ -27,13 +26,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-// ルーティングを設定
-app.use('/', indexRouter);
 /*
 userの操作を行うルート
 */
-app.use('/api/userCrud',userCrudRouter);
+app.use('/api/users', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
