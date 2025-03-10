@@ -1,0 +1,67 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # main ブランチにプッシュされたら実行
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # フロントエンド (Vue.js) のビルド
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 コードを取得
+        uses: actions/checkout@v3
+
+      - name: 🔧 Node.js のセットアップ
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: 📦 依存関係をインストール
+        run: |
+          cd vue-frontend
+          npm install
+
+      - name: 🏗️ Vue.js をビルド
+        run: |
+          cd vue-frontend
+          npm run build
+
+  # バックエンド (Go) のビルド
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 コードを取得
+        uses: actions/checkout@v3
+
+      - name: 🔧 Go のセットアップ
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+
+      - name: 📦 依存関係をインストール
+        run: |
+          cd web_myapp
+          go mod tidy
+
+      - name: ✅ Go のテストを実行
+        run: |
+          cd web_myapp
+          go test ./...
+
+  # 🚀 デプロイ
+  deploy:
+    needs: [build-frontend, build-backend]  # フロントとバックのビルドが成功したら実行
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔑 SSH を設定してサーバーに接続
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > deploy_key && chmod 600 deploy_key
+          ssh -i deploy_key -o StrictHostKeyChecking=no user@$SERVER_IP "cd /path/to/app && git pull && docker-compose up -d --build"
