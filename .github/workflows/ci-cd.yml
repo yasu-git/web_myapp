@@ -57,7 +57,7 @@ jobs:
           path: web_myapp  # `web_myapp` にクローン
 
       - name: 📂 ディレクトリ構成を確認
-        run: ls -la
+        run: ls -la && ls -la web_myapp  # `web_myapp` があるか確認
 
       - name: 🔧 Go のセットアップ
         uses: actions/setup-go@v3
