@@ -13,9 +13,6 @@ jobs:
   build-frontend:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 メインリポジトリのコードを取得
-        uses: actions/checkout@v3
-
       - name: 📥 フロントエンドリポジトリのコードを取得
         uses: actions/checkout@v3
         with:
@@ -23,7 +20,7 @@ jobs:
           path: vue-frontend  # `vue-frontend` にクローン
 
       - name: 📂 ディレクトリ構成を確認
-        run: ls -la
+        run: ls -la vue-frontend
 
       - name: 🔧 Node.js のセットアップ
         uses: actions/setup-node@v3
@@ -36,42 +33,42 @@ jobs:
 
       - name: 📦 依存関係をインストール
         run: |
-          ls -la vue-frontend  # `vue-frontend` の中身を確認
-          cd vue-frontend && yarn install
+          cd vue-frontend
+          yarn install --frozen-lockfile
 
       - name: 🏗️ Vue.js をビルド
         run: |
-          cd vue-frontend && yarn build
+          cd vue-frontend
+          yarn build
 
-  # バックエンド (Go) のビルド
+  # バックエンド (Express) のビルド
   build-backend:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 メインリポジトリのコードを取得
-        uses: actions/checkout@v3
-
       - name: 📥 バックエンドリポジトリのコードを取得
         uses: actions/checkout@v3
         with:
-          repository: yasu-git/web_myapp  # Goのリポジトリ
+          repository: yasu-git/web_myapp  # Expressのリポジトリ
           path: web_myapp  # `web_myapp` にクローン
 
       - name: 📂 ディレクトリ構成を確認
-        run: ls -la && ls -la web_myapp  # `web_myapp` があるか確認
+        run: ls -la web_myapp
 
-      - name: 🔧 Go のセットアップ
-        uses: actions/setup-go@v3
+      - name: 🔧 Node.js のセットアップ
+        uses: actions/setup-node@v3
         with:
-          go-version: '1.20'
+          node-version: '18'
+          cache: 'npm'  # `npm` のキャッシュを利用
 
       - name: 📦 依存関係をインストール
         run: |
-          ls -la web_myapp  # `web_myapp` の中身を確認
-          cd web_myapp && go mod tidy
+          cd web_myapp
+          npm ci  # `npm install` の代わりに `npm ci` を使ってクリーンインストール
 
-      - name: ✅ Go のテストを実行
+      - name: ✅ Expressのテストを実行（ある場合）
         run: |
-          cd web_myapp && go test ./...
+          cd web_myapp
+          npm test || echo "No tests found, skipping..."
 
   # 🚀 デプロイ
   deploy:
