@@ -13,30 +13,51 @@ jobs:
   build-frontend:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 コードを取得
+      - name: 📥 メインリポジトリのコードを取得
         uses: actions/checkout@v3
+
+      - name: 📥 フロントエンドリポジトリのコードを取得
+        uses: actions/checkout@v3
+        with:
+          repository: yasu-git/vue-frontend  # Vueのリポジトリ
+          path: vue-frontend  # `vue-frontend` にクローン
+
+      - name: 📂 ディレクトリ構成を確認
+        run: ls -la
 
       - name: 🔧 Node.js のセットアップ
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'yarn'  # `yarn` のキャッシュを利用
+
+      - name: 📦 Yarn をインストール
+        run: npm install -g yarn  # `yarn` をグローバルにインストール
 
       - name: 📦 依存関係をインストール
         run: |
-          cd vue-frontend
-          npm install
+          ls -la vue-frontend  # `vue-frontend` の中身を確認
+          cd vue-frontend && yarn install
 
       - name: 🏗️ Vue.js をビルド
         run: |
-          cd vue-frontend
-          npm run build
+          cd vue-frontend && yarn build
 
   # バックエンド (Go) のビルド
   build-backend:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 コードを取得
+      - name: 📥 メインリポジトリのコードを取得
         uses: actions/checkout@v3
+
+      - name: 📥 バックエンドリポジトリのコードを取得
+        uses: actions/checkout@v3
+        with:
+          repository: yasu-git/web_myapp  # Goのリポジトリ
+          path: web_myapp  # `web_myapp` にクローン
+
+      - name: 📂 ディレクトリ構成を確認
+        run: ls -la
 
       - name: 🔧 Go のセットアップ
         uses: actions/setup-go@v3
@@ -45,23 +66,27 @@ jobs:
 
       - name: 📦 依存関係をインストール
         run: |
-          cd web_myapp
-          go mod tidy
+          ls -la web_myapp  # `web_myapp` の中身を確認
+          cd web_myapp && go mod tidy
 
       - name: ✅ Go のテストを実行
         run: |
-          cd web_myapp
-          go test ./...
+          cd web_myapp && go test ./...
 
   # 🚀 デプロイ
   deploy:
     needs: [build-frontend, build-backend]  # フロントとバックのビルドが成功したら実行
     runs-on: ubuntu-latest
     steps:
-      - name: 🔑 SSH を設定してサーバーに接続
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SERVER_IP: ${{ secrets.SERVER_IP }}
+      - name: 🔑 SSH の設定
         run: |
-          echo "$SSH_PRIVATE_KEY" > deploy_key && chmod 600 deploy_key
-          ssh -i deploy_key -o StrictHostKeyChecking=no user@$SERVER_IP "cd /path/to/app && git pull && docker-compose up -d --build"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > deploy_key
+          chmod 600 deploy_key
+
+      - name: 🚀 サーバーへデプロイ
+        run: |
+          ssh -i deploy_key -o StrictHostKeyChecking=no user@${{ secrets.SERVER_IP }} /bin/bash -c "
+            cd /home/user/myapp || exit 1
+            git pull
+            docker-compose ps  # 現在のコンテナの状態を確認
+            docker-compose up -d --build"
